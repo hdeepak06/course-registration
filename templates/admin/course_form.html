@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Update Course: {{ course.course_code }}{% else %}Add New Course{% endif %} — Admin Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 3.5rem 0; background: var(--bg-ivory);">
+  <div class="container" style="max-width: 780px;">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> &gt; 
+      <a href="{{ url_for('admin.manage_courses') }}">Courses</a> &gt; 
+      <span style="color: var(--navy-800); font-weight: 600;">{% if is_edit %}Edit Course{% else %}New Course{% endif %}</span>
+    </div>
+
+    <div class="table-card" style="padding: 2.5rem; border-top: 4px solid var(--gold-500);">
+      <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; color: var(--navy-800); margin-bottom: 0.35rem;">
+          {% if is_edit %}Update Course: {{ course.course_code }}{% else %}Add New Course{% endif %}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          {% if is_edit %}
+            Modify course details or adjust capacity limits. Note: Maximum seats cannot be reduced below the number of currently enrolled students.
+          {% else %}
+            Publish a new course to the registration catalog.
+          {% endif %}
+        </p>
+      </div>
+
+      <form method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label for="courseCode" class="form-label">Course Code</label>
+            <input type="text" id="courseCode" name="course_code" class="form-control" placeholder="e.g. CS101" value="{{ course.course_code or '' }}" required maxlength="20" style="text-transform: uppercase;">
+            <div class="form-helper">Unique course identifier.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="courseTitle" class="form-label">Course Title</label>
+            <input type="text" id="courseTitle" name="course_title" class="form-control" placeholder="e.g. Introduction to Computer Science" value="{{ course.course_title or '' }}" required maxlength="150">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label for="courseInstructor" class="form-label">Instructor Name</label>
+            <input type="text" id="courseInstructor" name="instructor" class="form-control" placeholder="e.g. Dr. Alan Turing" value="{{ course.instructor or '' }}" required maxlength="100">
+          </div>
+
+          <div class="form-group">
+            <label for="courseDept" class="form-label">Department</label>
+            <input type="text" id="courseDept" name="department" class="form-control" placeholder="e.g. Computer Science" value="{{ course.department or 'Computer Science' }}" list="departmentList" required>
+            <datalist id="departmentList">
+              {% for dept in departments %}
+                <option value="{{ dept }}">
+              {% endfor %}
+              <option value="Computer Science">
+              <option value="Information Systems">
+              <option value="Software Engineering">
+              <option value="Data Science">
+              <option value="Cybersecurity">
+              <option value="Mathematics">
+            </datalist>
+          </div>
+
+          <div class="form-group">
+            <label for="courseCredits" class="form-label">Credits</label>
+            <input type="number" id="courseCredits" name="credits" class="form-control" value="{{ course.credits or 3 }}" min="1" max="10" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="max-width: 260px;">
+          <label for="maxSeats" class="form-label">Maximum Seat Capacity</label>
+          <input type="number" id="maxSeats" name="max_seats" class="form-control" value="{{ course.max_seats or 30 }}" min="1" max="500" required>
+          {% if is_edit %}
+            <div class="form-helper">
+              Current enrolled: <strong>{{ course.max_seats - course.available_seats }}</strong> students.
+            </div>
+          {% else %}
+            <div class="form-helper">Available seats will start at this capacity.</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="courseDesc" class="form-label">Course Description & Syllabus</label>
+          <textarea id="courseDesc" name="description" class="form-control" rows="5" placeholder="Provide a detailed overview of topics covered, prerequisites, and learning outcomes..." required>{{ course.description or '' }}</textarea>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 1rem;">
+          <a href="{{ url_for('admin.manage_courses') }}" class="btn-secondary">
+            Back to Dashboard
+          </a>
+
+          <button type="submit" class="btn-gold btn-gold-lg" id="saveCourseSubmitBtn">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {% if is_edit %}Update Course{% else %}Save Course{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

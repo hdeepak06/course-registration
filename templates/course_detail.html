@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.course_code }}: {{ course.course_title }} — CourseConnect{% endblock %}
+
+{% block content %}
+<section style="padding: 3.5rem 0; background: var(--bg-ivory);">
+  <div class="container" style="max-width: 900px;">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      <a href="{{ url_for('course.index') }}">Home</a> &gt; 
+      <a href="{{ url_for('course.explore') }}">Courses</a> &gt; 
+      <span style="color: var(--navy-800); font-weight: 600;">{{ course.course_code }}</span>
+    </div>
+
+    <!-- Course Header Card -->
+    <div class="table-card" style="padding: 2.5rem; margin-bottom: 2rem; border-top: 4px solid var(--gold-500);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+            <span class="course-code-badge" style="font-size: 0.95rem; padding: 0.35rem 0.85rem;">{{ course.course_code }}</span>
+            <span class="course-dept-tag" style="font-size: 0.85rem;">{{ course.department }}</span>
+            <span class="user-badge" style="font-size: 0.82rem;">{{ course.credits }} Academic Credits</span>
+          </div>
+          <h1 style="font-size: 2.25rem; color: var(--navy-800); margin-bottom: 0.5rem;">{{ course.course_title }}</h1>
+          <div class="course-instructor" style="font-size: 1.05rem;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Instructor: <strong>{{ course.instructor }}</strong></span>
+          </div>
+        </div>
+
+        {% if current_user and current_user.role == 'administrator' %}
+          <div>
+            <a href="{{ url_for('admin.edit_course', course_id=course.course_id) }}" class="btn-gold">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Update Course
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Capacity & Status Banner -->
+      <div class="course-meta-bar" style="padding: 1.25rem; margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
+          <div>
+            <span class="meta-label" style="display: block; font-size: 0.8rem; text-transform: uppercase;">Maximum Capacity</span>
+            <span style="font-size: 1.5rem; font-weight: 700; color: var(--navy-800);">{{ course.max_seats }} Seats</span>
+          </div>
+          <div>
+            <span class="meta-label" style="display: block; font-size: 0.8rem; text-transform: uppercase;">Enrolled Students</span>
+            <span style="font-size: 1.5rem; font-weight: 700; color: var(--navy-800);">{{ course.max_seats - course.available_seats }}</span>
+          </div>
+          <div>
+            <span class="meta-label" style="display: block; font-size: 0.8rem; text-transform: uppercase;">Remaining Available</span>
+            <span style="font-size: 1.5rem; font-weight: 700; {% if course.available_seats == 0 %}color: var(--danger-red);{% else %}color: var(--success-green);{% endif %}">
+              {{ course.available_seats }} Seats
+            </span>
+          </div>
+        </div>
+
+        {% set pct = ((course.max_seats - course.available_seats) / course.max_seats * 100) if course.max_seats > 0 else 100 %}
+        <div class="progress-track" style="height: 10px;">
+          <div class="progress-fill {% if course.available_seats == 0 %}red{% elif course.available_seats <= 5 %}amber{% else %}green{% endif %}" style="width: {{ pct }}%;"></div>
+        </div>
+      </div>
+
+      <!-- Description Body -->
+      <div style="margin-bottom: 2.5rem;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--navy-800);">Course Overview & Curriculum</h3>
+        <p style="font-size: 1.05rem; line-height: 1.75; color: var(--text-secondary);">
+          {{ course.description }}
+        </p>
+      </div>
+
+      <!-- Primary Action Footer with Golden Buttons -->
+      <div style="padding-top: 1.5rem; border-top: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <a href="{{ url_for('course.explore') }}" class="btn-secondary">
+          &larr; Back to Course List
+        </a>
+
+        {% if current_user and current_user.role == 'student' %}
+          {% if is_enrolled %}
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <span class="badge-status enrolled" style="font-size: 0.95rem; padding: 0.4rem 0.8rem;">
+                ✓ You are Enrolled
+              </span>
+              <form method="POST" action="{{ url_for('student.cancel', course_id=course.course_id) }}" onsubmit="return confirm('Are you sure you want to cancel your enrollment in this course?');">
+                <button type="submit" class="btn-danger">
+                  Cancel Enrollment
+                </button>
+              </form>
+            </div>
+          {% elif course.available_seats == 0 %}
+            <button class="btn-secondary btn-disabled" disabled>
+              Course at Maximum Capacity (0 Seats)
+            </button>
+          {% else %}
+            <form method="POST" action="{{ url_for('student.enroll', course_id=course.course_id) }}">
+              <button type="submit" class="btn-gold btn-gold-lg" id="btnRegisterForCourse">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Register for Course
+              </button>
+            </form>
+          {% endif %}
+        {% elif current_user and current_user.role == 'administrator' %}
+          <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('admin.edit_course', course_id=course.course_id) }}" class="btn-gold">
+              Update Course
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn-secondary">
+              Back to Dashboard
+            </a>
+          </div>
+        {% else %}
+          <a href="{{ url_for('auth.login', next=url_for('course.course_detail', course_id=course.course_id)) }}" class="btn-gold btn-gold-lg">
+            Login to Register for Course
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
