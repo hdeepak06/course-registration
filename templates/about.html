@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}About CourseConnect — Engineering Architecture & Portfolio Showcase{% endblock %}
+{% block title %}About CourseConnect — Engineering Architecture &amp; Portfolio Showcase{% endblock %}
 
 {% block content %}
 <section style="padding: 4rem 0; background: var(--bg-ivory);">
@@ -8,13 +8,13 @@
     <div style="text-align: center; margin-bottom: 3.5rem;">
       <div class="hero-pill">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <span>Backend Engineering Portfolio Showcase</span>
+        <span>Backend Engineering Portfolio Showcase (Django &amp; MySQL)</span>
       </div>
       <h1 style="font-size: 2.75rem; color: var(--navy-800); margin-bottom: 1rem;">
         About <span class="gold-gradient-text">CourseConnect</span>
       </h1>
       <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 720px; margin: 0 auto;">
-        A high-concurrency academic registration system engineered with Python Flask, MySQL, and clean transactional database principles.
+        An academic registration system engineered with Python Django, MySQL, Django ORM, and transactional concurrency control.
       </p>
     </div>
 
@@ -24,16 +24,16 @@
         <div class="stat-icon">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
-        <div style="font-family:'Plus Jakarta Sans'; font-size:1.3rem; font-weight:700; color:var(--navy-800); margin-bottom:0.25rem;">Relational Integrity</div>
-        <div class="stat-label">3NF Normalized Schema</div>
+        <div style="font-family:'Plus Jakarta Sans'; font-size:1.3rem; font-weight:700; color:var(--navy-800); margin-bottom:0.25rem;">Django ORM &amp; MySQL</div>
+        <div class="stat-label">Relational Database Mapping</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div style="font-family:'Plus Jakarta Sans'; font-size:1.3rem; font-weight:700; color:var(--navy-800); margin-bottom:0.25rem;">OWASP Secure</div>
-        <div class="stat-label">Parameterized SQL & Hashing</div>
+        <div style="font-family:'Plus Jakarta Sans'; font-size:1.3rem; font-weight:700; color:var(--navy-800); margin-bottom:0.25rem;">Built-in Security</div>
+        <div class="stat-label">CSRF, PBKDF2 &amp; SQL Injection Immune</div>
       </div>
 
       <div class="stat-card">
@@ -41,41 +41,41 @@
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
         <div style="font-family:'Plus Jakarta Sans'; font-size:1.3rem; font-weight:700; color:var(--navy-800); margin-bottom:0.25rem;">ACID Transactions</div>
-        <div class="stat-label">Zero Over-Subscription</div>
+        <div class="stat-label">Row Locking with select_for_update</div>
       </div>
     </div>
 
     <!-- Detailed System Architecture Section -->
     <div class="table-card" style="padding: 2.5rem; margin-bottom: 2.5rem;">
-      <h2 style="font-size: 1.6rem; color: var(--navy-800); margin-bottom: 1rem;">1. Relational Database Design</h2>
+      <h2 style="font-size: 1.6rem; color: var(--navy-800); margin-bottom: 1rem;">1. Relational Database Design with Django ORM</h2>
       <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem;">
-        The system relies on a relational MySQL database named <code>course_registration</code> with strict referential integrity, foreign key cascades, unique constraints, and check constraints to prevent race conditions during seat assignment.
+        The system models university courses, student credentials, and course enrollments with foreign keys, unique composite indexes, and database-level check constraints.
       </p>
 
       <div style="background: var(--bg-ivory); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border-light);">
-        <h4 style="font-size: 1rem; color: var(--navy-800); margin-bottom: 0.5rem;">Database Tables & Constraints:</h4>
+        <h4 style="font-size: 1rem; color: var(--navy-800); margin-bottom: 0.5rem;">Django Models:</h4>
         <ul style="padding-left: 1.25rem; color: var(--text-secondary); line-height: 1.8;">
-          <li><strong><code>students</code>:</strong> Contains primary key <code>student_id</code>, unique <code>email</code>, <code>password_hash</code> (scrypt/PBKDF2 encrypted), and <code>role</code> (student vs administrator).</li>
-          <li><strong><code>courses</code>:</strong> Contains primary key <code>course_id</code>, unique <code>course_code</code>, <code>max_seats</code>, and <code>available_seats</code> protected by database check constraint <code>CHECK (available_seats >= 0 AND available_seats <= max_seats)</code>.</li>
-          <li><strong><code>enrollments</code>:</strong> Junction entity connecting students and courses with composite unique key <code>(student_id, course_id)</code> to eliminate duplicate active registrations.</li>
+          <li><strong><code>StudentProfile</code>:</strong> Links to Django's built-in <code>User</code> model via OneToOneField, managing role authorization (student vs administrator).</li>
+          <li><strong><code>Course</code>:</strong> Defines course details, instructor, capacity, and available seats, guarded by a model <code>CheckConstraint(Q(available_seats__gte=0) &amp; Q(available_seats__lte=F('max_seats')))</code>.</li>
+          <li><strong><code>Enrollment</code>:</strong> Junction model with composite unique constraint <code>unique_together = ('student', 'course')</code> ensuring duplicate active registrations are impossible.</li>
         </ul>
       </div>
 
-      <h2 style="font-size: 1.6rem; color: var(--navy-800); margin-bottom: 1rem;">2. Transactional Concurrency Control</h2>
+      <h2 style="font-size: 1.6rem; color: var(--navy-800); margin-bottom: 1rem;">2. Concurrency &amp; Transaction Safety</h2>
       <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem;">
-        Course enrollment operations are executed inside atomic database transactions. The system locks row records during reservation, verifies available seats, and decrements <code>available_seats</code> in lockstep with the enrollment insert. If two students request the final seat simultaneously, the database guarantees that only one succeeds and the other receives a descriptive error without data corruption.
+        Using Django's <code>transaction.atomic()</code> and <code>select_for_update()</code>, seat allocation and cancellation execute as ACID transactions. If two students request the last available seat simultaneously, the database serializes requests to guarantee zero over-subscription.
       </p>
 
       <h2 style="font-size: 1.6rem; color: var(--navy-800); margin-bottom: 1rem;">3. Golden Metallic Button Design System</h2>
       <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem;">
-        Built according to the specification with a metallic gold gradient (<code>#B8860B</code>, <code>#D4AF37</code>, <code>#F5D76E</code>), high-contrast navy text, specular highlight sheen on hover, and smooth cubic-bezier transitions. Destructive actions utilize distinct danger warning styling to prevent accidental deletions.
+        Styled with custom CSS classes (<code>.btn-gold</code>, <code>.btn-gold:hover</code>, <code>.btn-gold:active</code>) using rich metallic gold gradients (<code>#B8860B</code>, <code>#D4AF37</code>, <code>#F5D76E</code>), high-contrast navy text, and smooth animations.
       </p>
 
       <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light);">
-        <a href="{{ url_for('course.explore') }}" class="btn-gold">
+        <a href="{% url 'courses:explore' %}" class="btn-gold">
           Explore Courses
         </a>
-        <a href="{{ url_for('auth.login') }}" class="btn-gold-outline">
+        <a href="{% url 'accounts:login' %}" class="btn-gold-outline">
           Login / Demo Portal
         </a>
       </div>

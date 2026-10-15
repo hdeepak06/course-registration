@@ -1,17 +1,18 @@
-# CourseConnect — Premium Course Registration Platform
+# CourseConnect — Premium Course Registration Platform (Django & MySQL)
 
-> An enterprise-grade, full-stack academic course registration website built for a backend software engineering portfolio. Developed with **Python (Flask)**, **MySQL**, and **Vanilla HTML5, CSS3, & Modern JavaScript**, featuring an elegant metallic **Golden Button Design System** throughout the interface.
+> An enterprise-grade, full-stack academic course registration website built for a backend software engineering portfolio. Engineered using **Python (Django)**, **MySQL**, and **Vanilla HTML5, CSS3, & Modern JavaScript**, featuring an elegant metallic **Golden Button Design System** throughout the interface.
 
 ---
 
-## 🌟 Key Highlights & Engineering Features
+## 🌟 Key Engineering Highlights
 
-- **Relational MySQL Database Architecture**: 3NF normalized schema with `students`, `courses`, and `enrollments` tables, foreign key constraints, cascading deletes, and database-level `CHECK` constraints.
-- **ACID Transaction Management**: Multi-step course enrollment and cancellation operations execute inside explicit atomic database transactions to guarantee zero seat over-subscription or inconsistent states.
-- **Role-Based Access Control (RBAC)**: Enforced strictly on the server via custom decorators (`@login_required`, `@admin_required`), protecting administrator routes against unauthorized access.
-- **OWASP Secure Authentication**: Passwords hashed using industry-standard **scrypt** and PBKDF2 mechanisms via `werkzeug.security`. Never stores plaintext passwords.
-- **Golden Button Design System**: Crafted with rich metallic gold gradients (`#B8860B`, `#D4AF37`, `#F5D76E`), subtle highlights, smooth cubic-bezier transitions, hover elevation, and pressed feedback.
-- **Zero-Friction Hybrid Database Adapter**: Built-in support for native `mysql-connector-python` with an intelligent fallback adapter to local SQLite if the MySQL service is offline, allowing instant local testing without setup barriers.
+- **Django ORM & Relational Architecture**: 3NF normalized schema with `User`, `StudentProfile`, `Course`, and `Enrollment` models, foreign key relationships, cascading deletes, and database-level `CheckConstraint` (`CHECK (available_seats >= 0 AND available_seats <= max_seats)`).
+- **ACID Transaction Management**: Course registration and cancellation execute inside atomic database transactions (`transaction.atomic()`) with row locking (`select_for_update()`) to prevent race conditions and eliminate seat over-subscription.
+- **Dual Administrator Interfaces**: Includes both a custom styled administrative dashboard (`/admin-portal/`) with analytics & capacity controls, and Django's built-in administration suite (`/admin/`).
+- **Django Authentication & RBAC**: Enforced role-based access control protecting administrative routes (`@admin_required`) and student actions (`@login_required`).
+- **CSRF & OWASP Security**: Native Django CSRF tokens on all POST forms, PBKDF2 password hashing, and parameterized query execution via the ORM.
+- **Metallic Golden Button Design System**: Crafted with rich metallic gold gradients (`#B8860B`, `#D4AF37`, `#F5D76E`), subtle highlights, smooth cubic-bezier transitions, hover elevation, and pressed feedback.
+- **Hybrid Database Connectivity**: Configured for MySQL with `pymysql` and intelligent auto-detection fallback to local SQLite when local MySQL service is offline.
 
 ---
 
@@ -20,10 +21,10 @@
 | Layer | Technologies |
 |---|---|
 | **Frontend** | HTML5, Modern CSS3 (Vanilla design system, no Tailwind), ES6 JavaScript |
-| **Backend** | Python 3.12, Flask 3.1, Jinja2 templating |
-| **Database** | MySQL (with Python MySQL Connector), Fallback SQLite adapter |
-| **Security** | Scrypt / PBKDF2 password hashing, Parameterized SQL queries, Session cookies with HttpOnly & SameSite |
-| **Testing** | Python `unittest` test suite covering routes, auth, transactions, and role enforcement |
+| **Backend** | Python 3.12, Django 5.1 (Models, Views, Forms, Migrations, Django Templates) |
+| **Database** | MySQL (via `pymysql` & Django MySQL engine) / SQLite fallback |
+| **Security** | CSRF protection, PBKDF2 password hashing, Parameterized queries, Session management |
+| **Testing** | Django `TestCase` test suite covering routes, auth, transactions, and RBAC |
 
 ---
 
@@ -34,7 +35,7 @@ The application features a bespoke golden button design (`.btn-gold`, `.btn-gold
 - **Text Color**: Deep Navy Charcoal (`#060D17`) for contrast ratio compliance.
 - **Highlight Sheen**: Specular diagonal reflection on hover.
 - **Elevated Shadows**: Subtle multi-layered box-shadow with gold-tinted glow (`0 4px 14px rgba(184, 134, 11, 0.28)`).
-- **Destructive Actions**: Course deletions use a dedicated warning styling (`.btn-danger`) rather than gold, strictly adhering to UX best practices.
+- **Destructive Actions**: Course deletions use a dedicated warning styling (`.btn-danger`) rather than gold, strictly adhering to UX safety principles.
 
 ### Implemented Golden Buttons:
 1. **Explore Courses**
@@ -55,57 +56,23 @@ The application features a bespoke golden button design (`.btn-gold`, `.btn-gold
 
 ---
 
-## 🗄️ Relational Database Schema (`course_registration`)
+## 🗄️ Database Models & Relational Architecture
 
-### 1. `students` Table
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `student_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique student/user identifier |
-| `full_name` | VARCHAR(100) | NOT NULL | Student's full name |
-| `email` | VARCHAR(150) | NOT NULL, UNIQUE | Academic login email |
-| `password_hash` | VARCHAR(255) | NOT NULL | Secure salted password hash |
-| `role` | ENUM | 'student', 'administrator' | User access role |
-| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Registration timestamp |
+### 1. `StudentProfile` (`student_profiles`)
+- Extends Django's `User` model via `OneToOneField`.
+- Role-based flag: `role` (`student` or `administrator`).
+- Timestamp: `created_at`.
 
-### 2. `courses` Table
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `course_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique course identifier |
-| `course_code` | VARCHAR(20) | NOT NULL, UNIQUE | Course code (e.g. CS101) |
-| `course_title` | VARCHAR(150) | NOT NULL | Full course title |
-| `description` | TEXT | NOT NULL | Course description & curriculum |
-| `instructor` | VARCHAR(100) | NOT NULL | Lead professor or instructor |
-| `max_seats` | INT | NOT NULL | Total capacity limit |
-| `available_seats` | INT | NOT NULL, CHECK (0 <= available <= max) | Remaining open seats |
-| `department` | VARCHAR(80) | DEFAULT 'Computer Science' | Academic department |
-| `credits` | INT | DEFAULT 3 | Academic credits earned |
-| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Creation timestamp |
+### 2. `Course` (`courses`)
+- `course_code`: Unique identifier (e.g. `CS101`, indexed).
+- `course_title`, `description`, `instructor`, `department`, `credits`.
+- `max_seats` & `available_seats`: Checked by `valid_seat_capacity` constraint (`0 <= available_seats <= max_seats`).
 
-### 3. `enrollments` Table
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `enrollment_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Registration log entry ID |
-| `student_id` | INT | FOREIGN KEY (students) ON DELETE CASCADE | Enrolled student reference |
-| `course_id` | INT | FOREIGN KEY (courses) ON DELETE CASCADE | Target course reference |
-| `enrollment_date` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Enrollment timestamp |
-| `status` | ENUM | 'enrolled', 'cancelled' | Enrollment status |
-| `UNIQUE KEY` | `(student_id, course_id)` | Prevents duplicate enrollments |
-
----
-
-## ⚡ Concurrency & Transaction Management
-
-Course enrollment logic is encapsulated in `services/enrollment_service.py` within an ACID transaction:
-```python
-with transaction() as (conn, cursor):
-    # 1. Verify student exists
-    # 2. Check if student is already enrolled (status = 'enrolled')
-    # 3. Check course available_seats > 0
-    # 4. Insert or update enrollment record
-    # 5. Decrement available_seats atomically
-    # 6. Commit or rollback on error
-```
-When cancellation occurs, `available_seats` is safely incremented back to release the seat.
+### 3. `Enrollment` (`enrollments`)
+- `student`: Foreign key to `User` (cascading delete).
+- `course`: Foreign key to `Course` (cascading delete).
+- `status`: `enrolled` or `cancelled`.
+- Unique together: `('student', 'course')` preventing duplicate active registrations.
 
 ---
 
@@ -113,17 +80,14 @@ When cancellation occurs, `available_seats` is safely incremented back to releas
 
 ### 1. Prerequisites
 - Python 3.10+
-- MySQL Server (optional; local SQLite fallback automatically engages if MySQL is not running)
+- MySQL Server (optional; local SQLite fallback automatically engages if MySQL is offline)
 
-### 2. Clone and Install Dependencies
+### 2. Install Dependencies
 ```bash
-git clone https://github.com/your-username/course-registration.git
-cd "course-registration"
 pip install -r requirements.txt
 ```
 
-### 3. Configure Database (.env)
-Copy `.env.example` to `.env` and configure your MySQL credentials:
+### 3. Configure Database (`.env`)
 ```ini
 DB_ENGINE=auto
 MYSQL_HOST=localhost
@@ -133,41 +97,42 @@ MYSQL_PASSWORD=
 MYSQL_DATABASE=course_registration
 ```
 
-### 4. Initialize Database & Seed Sample Records
+### 4. Apply Migrations & Seed Sample Data
 ```bash
-python database/init_db.py
+python manage.py makemigrations
+python manage.py migrate
+python manage.py seed_data
 ```
-This script creates tables and seeds demo students, administrators, and realistic courses.
 
-### 5. Run the Application
+### 5. Start the Development Server
 ```bash
-python app.py
+python manage.py runserver 8000
 ```
-Open your browser and navigate to: `http://127.0.0.1:5000`
+Open your browser and navigate to: `http://127.0.0.1:8000`
 
 ---
 
 ## 🔐 Default Demo Accounts for Evaluation
 
-| Role | Email | Password | Access Level |
+| Role | Email / Username | Password | Permissions |
 |---|---|---|---|
-| **Administrator** | `admin@courseconnect.edu` | `Admin@123` | Full CRUD, capacity controls, enrollment audit logs |
-| **Student** | `sarah.jenkins@student.edu` | `Student@123` | Course browsing, registration, My Courses dashboard |
-| **Student** | `elena.rostova@student.edu` | `Student@123` | Course browsing, registration, cancellation |
+| **Administrator** | `admin@courseconnect.edu` | `Admin@123` | Course CRUD, capacity management, enrollment audit log, Django Admin access |
+| **Student** | `sarah.jenkins@student.edu` | `Student@123` | Course search, registration, My Courses dashboard, cancellation |
+| **Student** | `elena.rostova@student.edu` | `Student@123` | Course search, registration, cancellation |
 
 ---
 
 ## 🧪 Automated Testing
 
-A full automated test suite is included in `tests/test_app.py`:
+A full automated test suite is included in `courses/tests.py`:
 ```bash
-python -m unittest tests/test_app.py
+python manage.py test
 ```
 Tests verify:
 - Homepage rendering, statistics calculation, and hero CTA buttons
 - Live course search & keyword filtering
-- Input validation (short passwords, email formats, mismatch detection)
-- Password hashing and authentication flows
-- Role-based server access controls (guarding `/admin`)
+- Registration input validation and error messages
+- Password hashing and session login/logout
+- Role-based server access controls (guarding `/admin-portal/`)
 - Course creation, duplicate code rejection, capacity limits
 - Atomic seat decrement upon enrollment, duplicate enrollment blocking, and seat release on cancellation.

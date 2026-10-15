@@ -12,7 +12,7 @@
         <p class="section-subtitle">Manage your active academic enrollments and track schedule capacity.</p>
       </div>
       <div>
-        <a href="{{ url_for('course.explore') }}" class="btn-gold" id="btnExploreMore">
+        <a href="{% url 'courses:explore' %}" class="btn-gold" id="btnExploreMore">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
           Register for More Courses
         </a>
@@ -58,29 +58,30 @@
               {% for item in active_enrollments %}
                 <tr>
                   <td>
-                    <span class="course-code-badge">{{ item.course_code }}</span>
+                    <span class="course-code-badge">{{ item.course.course_code }}</span>
                   </td>
                   <td>
-                    <a href="{{ url_for('course.course_detail', course_id=item.course_id) }}" style="font-weight: 600; color: var(--navy-800);">
-                      {{ item.course_title }}
+                    <a href="{% url 'courses:course_detail' item.course.id %}" style="font-weight: 600; color: var(--navy-800);">
+                      {{ item.course.course_title }}
                     </a>
                   </td>
-                  <td>{{ item.department }}</td>
-                  <td>{{ item.instructor }}</td>
-                  <td>{{ item.credits }} Credits</td>
+                  <td>{{ item.course.department }}</td>
+                  <td>{{ item.course.instructor }}</td>
+                  <td>{{ item.course.credits }} Credits</td>
                   <td style="font-size: 0.85rem; color: var(--text-muted);">
-                    {{ item.enrollment_date }}
+                    {{ item.enrollment_date|date:"M d, Y" }}
                   </td>
                   <td>
                     <span class="badge-status enrolled">✓ Enrolled</span>
                   </td>
                   <td style="text-align: right;">
                     <div style="display: inline-flex; gap: 0.5rem;">
-                      <a href="{{ url_for('course.course_detail', course_id=item.course_id) }}" class="btn-secondary btn-gold-sm">
+                      <a href="{% url 'courses:course_detail' item.course.id %}" class="btn-secondary btn-gold-sm">
                         View Details
                       </a>
-                      <form method="POST" action="{{ url_for('student.cancel', course_id=item.course_id) }}" onsubmit="return confirm('Are you sure you want to cancel your registration in {{ item.course_code }}? This will release your seat to other students.');" style="display:inline;">
-                        <button type="submit" class="btn-danger btn-gold-sm" id="cancelEnrollmentBtn_{{ item.course_id }}">
+                      <form method="POST" action="{% url 'courses:cancel' item.course.id %}" onsubmit="return confirm('Are you sure you want to cancel your registration in {{ item.course.course_code }}? This will release your seat to other students.');" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-danger btn-gold-sm" id="cancelEnrollmentBtn_{{ item.course.id }}">
                           Cancel Enrollment
                         </button>
                       </form>
@@ -99,7 +100,7 @@
         </svg>
         <h3 class="empty-title">You Have Not Enrolled in Any Courses Yet</h3>
         <p class="empty-desc">Explore our course catalog and reserve your seat in high-demand software engineering courses.</p>
-        <a href="{{ url_for('course.explore') }}" class="btn-gold btn-gold-lg">
+        <a href="{% url 'courses:explore' %}" class="btn-gold btn-gold-lg">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg>
           Explore Courses Now
         </a>
@@ -125,12 +126,12 @@
               <tbody>
                 {% for item in cancelled_enrollments %}
                   <tr>
-                    <td><span class="course-code-badge" style="background:#64748B;">{{ item.course_code }}</span></td>
-                    <td>{{ item.course_title }}</td>
-                    <td>{{ item.instructor }}</td>
+                    <td><span class="course-code-badge" style="background:#64748B;">{{ item.course.course_code }}</span></td>
+                    <td>{{ item.course.course_title }}</td>
+                    <td>{{ item.course.instructor }}</td>
                     <td><span class="badge-status cancelled">Cancelled</span></td>
                     <td style="text-align: right;">
-                      <a href="{{ url_for('course.course_detail', course_id=item.course_id) }}" class="btn-secondary btn-gold-sm">
+                      <a href="{% url 'courses:course_detail' item.course.id %}" class="btn-secondary btn-gold-sm">
                         View Course
                       </a>
                     </td>

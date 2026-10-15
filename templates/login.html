@@ -15,15 +15,20 @@
       <p class="auth-subtitle">Sign in to your CourseConnect student or admin account</p>
     </div>
 
-    <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+    <form method="POST" action="{% url 'accounts:login' %}{% if next %}?next={{ next }}{% endif %}">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
       <div class="form-group">
         <label for="loginEmail" class="form-label">Email Address</label>
-        <input type="email" id="loginEmail" name="email" class="form-control" placeholder="name@domain.edu" value="{{ email or '' }}" required autofocus>
+        {{ form.email }}
       </div>
 
       <div class="form-group">
         <label for="loginPassword" class="form-label">Password</label>
-        <input type="password" id="loginPassword" name="password" class="form-control" placeholder="••••••••" required>
+        {{ form.password }}
       </div>
 
       <button type="submit" class="btn-gold" style="width: 100%; padding: 0.8rem; margin-top: 0.5rem;" id="loginSubmitBtn">
@@ -32,7 +37,7 @@
       </button>
     </form>
 
-    <!-- Quick Demo Credentials Box for Portfolio Evaluation -->
+    <!-- Quick Demo Credentials Box for Evaluation -->
     <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-ivory); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: var(--radius-md); font-size: 0.85rem;">
       <strong style="color: var(--navy-800); display: block; margin-bottom: 0.35rem;">Portfolio Demo Accounts:</strong>
       <div style="margin-bottom: 0.3rem;">
@@ -45,7 +50,7 @@
 
     <div class="auth-footer">
       Don't have an account yet? 
-      <a href="{{ url_for('auth.register') }}" style="color: var(--gold-700); font-weight: 600;">Sign Up</a>
+      <a href="{% url 'accounts:register' %}" style="color: var(--gold-700); font-weight: 600;">Sign Up</a>
     </div>
   </div>
 </div>

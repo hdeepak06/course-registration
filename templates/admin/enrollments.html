@@ -12,7 +12,7 @@
         <p class="section-subtitle">Comprehensive ledger of all course registrations and cancellations.</p>
       </div>
       <div>
-        <a href="{{ url_for('admin.dashboard') }}" class="btn-secondary">
+        <a href="{% url 'courses:admin_dashboard' %}" class="btn-secondary">
           Back to Dashboard
         </a>
       </div>
@@ -20,7 +20,7 @@
 
     <!-- Filter Bar -->
     <div class="filter-bar">
-      <form method="GET" action="{{ url_for('admin.view_enrollments') }}" class="filter-form">
+      <form method="GET" action="{% url 'courses:admin_enrollments' %}" class="filter-form">
         <div class="search-input-wrap">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"></circle>
@@ -40,7 +40,7 @@
         </button>
 
         {% if search or status_filter != 'all' %}
-          <a href="{{ url_for('admin.view_enrollments') }}" class="btn-secondary" style="font-size: 0.9rem;">Reset</a>
+          <a href="{% url 'courses:admin_enrollments' %}" class="btn-secondary" style="font-size: 0.9rem;">Reset</a>
         {% endif %}
       </form>
     </div>
@@ -65,19 +65,19 @@
             <tbody>
               {% for rec in enrollments %}
                 <tr>
-                  <td style="font-size: 0.85rem; color: var(--text-muted);">#{{ rec.enrollment_id }}</td>
-                  <td style="font-weight: 600; color: var(--navy-800);">{{ rec.student_name }}</td>
-                  <td style="color: var(--text-secondary); font-size: 0.9rem;">{{ rec.student_email }}</td>
+                  <td style="font-size: 0.85rem; color: var(--text-muted);">#{{ rec.id }}</td>
+                  <td style="font-weight: 600; color: var(--navy-800);">{{ rec.student.get_full_name|default:rec.student.username }}</td>
+                  <td style="color: var(--text-secondary); font-size: 0.9rem;">{{ rec.student.email }}</td>
                   <td>
-                    <span class="course-code-badge">{{ rec.course_code }}</span>
+                    <span class="course-code-badge">{{ rec.course.course_code }}</span>
                   </td>
                   <td>
-                    <a href="{{ url_for('course.course_detail', course_id=rec.course_id) }}" style="color: var(--navy-800); font-weight: 500;">
-                      {{ rec.course_title }}
+                    <a href="{% url 'courses:course_detail' rec.course.id %}" style="color: var(--navy-800); font-weight: 500;">
+                      {{ rec.course.course_title }}
                     </a>
                   </td>
-                  <td><span class="course-dept-tag">{{ rec.department }}</span></td>
-                  <td style="font-size: 0.85rem; color: var(--text-muted);">{{ rec.enrollment_date }}</td>
+                  <td><span class="course-dept-tag">{{ rec.course.department }}</span></td>
+                  <td style="font-size: 0.85rem; color: var(--text-muted);">{{ rec.enrollment_date|date:"M d, Y H:i" }}</td>
                   <td>
                     {% if rec.status == 'enrolled' %}
                       <span class="badge-status enrolled">✓ Active Enrollment</span>
@@ -95,7 +95,7 @@
       <div class="empty-state">
         <h3 class="empty-title">No Enrollment Records Found</h3>
         <p class="empty-desc">No registration entries matched your search criteria.</p>
-        <a href="{{ url_for('admin.view_enrollments') }}" class="btn-gold">
+        <a href="{% url 'courses:admin_enrollments' %}" class="btn-gold">
           View All Enrollments
         </a>
       </div>

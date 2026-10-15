@@ -7,8 +7,8 @@
   <div class="container" style="max-width: 780px;">
     <!-- Breadcrumb -->
     <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
-      <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> &gt; 
-      <a href="{{ url_for('admin.manage_courses') }}">Courses</a> &gt; 
+      <a href="{% url 'courses:admin_dashboard' %}">Dashboard</a> &gt; 
+      <a href="{% url 'courses:admin_manage_courses' %}">Courses</a> &gt; 
       <span style="color: var(--navy-800); font-weight: 600;">{% if is_edit %}Edit Course{% else %}New Course{% endif %}</span>
     </div>
 
@@ -27,28 +27,30 @@
       </div>
 
       <form method="POST">
+        {% csrf_token %}
+
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.25rem;">
           <div class="form-group">
             <label for="courseCode" class="form-label">Course Code</label>
-            <input type="text" id="courseCode" name="course_code" class="form-control" placeholder="e.g. CS101" value="{{ course.course_code or '' }}" required maxlength="20" style="text-transform: uppercase;">
+            {{ form.course_code }}
             <div class="form-helper">Unique course identifier.</div>
           </div>
 
           <div class="form-group">
             <label for="courseTitle" class="form-label">Course Title</label>
-            <input type="text" id="courseTitle" name="course_title" class="form-control" placeholder="e.g. Introduction to Computer Science" value="{{ course.course_title or '' }}" required maxlength="150">
+            {{ form.course_title }}
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 1.25rem;">
           <div class="form-group">
             <label for="courseInstructor" class="form-label">Instructor Name</label>
-            <input type="text" id="courseInstructor" name="instructor" class="form-control" placeholder="e.g. Dr. Alan Turing" value="{{ course.instructor or '' }}" required maxlength="100">
+            {{ form.instructor }}
           </div>
 
           <div class="form-group">
             <label for="courseDept" class="form-label">Department</label>
-            <input type="text" id="courseDept" name="department" class="form-control" placeholder="e.g. Computer Science" value="{{ course.department or 'Computer Science' }}" list="departmentList" required>
+            {{ form.department }}
             <datalist id="departmentList">
               {% for dept in departments %}
                 <option value="{{ dept }}">
@@ -64,16 +66,16 @@
 
           <div class="form-group">
             <label for="courseCredits" class="form-label">Credits</label>
-            <input type="number" id="courseCredits" name="credits" class="form-control" value="{{ course.credits or 3 }}" min="1" max="10" required>
+            {{ form.credits }}
           </div>
         </div>
 
         <div class="form-group" style="max-width: 260px;">
           <label for="maxSeats" class="form-label">Maximum Seat Capacity</label>
-          <input type="number" id="maxSeats" name="max_seats" class="form-control" value="{{ course.max_seats or 30 }}" min="1" max="500" required>
+          {{ form.max_seats }}
           {% if is_edit %}
             <div class="form-helper">
-              Current enrolled: <strong>{{ course.max_seats - course.available_seats }}</strong> students.
+              Current enrolled: <strong>{{ course.enrolled_count }}</strong> students.
             </div>
           {% else %}
             <div class="form-helper">Available seats will start at this capacity.</div>
@@ -81,12 +83,12 @@
         </div>
 
         <div class="form-group">
-          <label for="courseDesc" class="form-label">Course Description & Syllabus</label>
-          <textarea id="courseDesc" name="description" class="form-control" rows="5" placeholder="Provide a detailed overview of topics covered, prerequisites, and learning outcomes..." required>{{ course.description or '' }}</textarea>
+          <label for="courseDesc" class="form-label">Course Description &amp; Syllabus</label>
+          {{ form.description }}
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 1rem;">
-          <a href="{{ url_for('admin.manage_courses') }}" class="btn-secondary">
+          <a href="{% url 'courses:admin_manage_courses' %}" class="btn-secondary">
             Back to Dashboard
           </a>
 

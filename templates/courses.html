@@ -9,10 +9,10 @@
       <div class="section-title-wrap">
         <span class="section-pretitle">Academic Catalog</span>
         <h1 class="section-title">Explore Courses</h1>
-        <p class="section-subtitle">Find and register for computer science, engineering, and mathematics courses.</p>
+        <p class="section-subtitle">Find and register for computer science, engineering, and data science courses.</p>
       </div>
-      {% if current_user and current_user.role == 'administrator' %}
-        <a href="{{ url_for('admin.add_course') }}" class="btn-gold" id="btnAddNewCourse">
+      {% if user.is_authenticated and user.student_profile.is_admin %}
+        <a href="{% url 'courses:admin_course_create' %}" class="btn-gold" id="btnAddNewCourse">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
           Add New Course
         </a>
@@ -21,7 +21,7 @@
 
     <!-- Filter & Search Bar -->
     <div class="filter-bar">
-      <form method="GET" action="{{ url_for('course.explore') }}" class="filter-form">
+      <form method="GET" action="{% url 'courses:explore' %}" class="filter-form">
         <div class="search-input-wrap">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"></circle>
@@ -49,7 +49,7 @@
         </button>
 
         {% if search or selected_dept != 'all' or selected_avail != 'all' %}
-          <a href="{{ url_for('course.explore') }}" class="btn-secondary" style="font-size: 0.9rem;">Reset</a>
+          <a href="{% url 'courses:explore' %}" class="btn-secondary" style="font-size: 0.9rem;">Reset</a>
         {% endif %}
       </form>
     </div>
@@ -99,19 +99,18 @@
                   <span class="seats-badge available">● {{ course.available_seats }} of {{ course.max_seats }} seats</span>
                 {% endif %}
               </div>
-              {% set pct = ((course.max_seats - course.available_seats) / course.max_seats * 100) if course.max_seats > 0 else 100 %}
               <div class="progress-track">
-                <div class="progress-fill {% if course.available_seats == 0 %}red{% elif course.available_seats <= 5 %}amber{% else %}green{% endif %}" style="width: {{ pct }}%;"></div>
+                <div class="progress-fill {% if course.available_seats == 0 %}red{% elif course.available_seats <= 5 %}amber{% else %}green{% endif %}" style="width: {{ course.progress_pct }}%;"></div>
               </div>
             </div>
 
             <div class="course-actions">
-              <a href="{{ url_for('course.course_detail', course_id=course.course_id) }}" class="btn-secondary btn-quick-detail" data-course-id="{{ course.course_id }}">
+              <a href="{% url 'courses:course_detail' course.id %}" class="btn-secondary">
                 View Details
               </a>
 
-              {% if current_user and current_user.role == 'student' %}
-                {% if course.course_id in enrolled_ids %}
+              {% if user.is_authenticated and not user.student_profile.is_admin %}
+                {% if course.id in enrolled_ids %}
                   <button class="btn-gold btn-disabled" disabled>
                     ✓ Enrolled
                   </button>
@@ -120,18 +119,19 @@
                     Course Full
                   </button>
                 {% else %}
-                  <form method="POST" action="{{ url_for('student.enroll', course_id=course.course_id) }}">
+                  <form method="POST" action="{% url 'courses:enroll' course.id %}">
+                    {% csrf_token %}
                     <button type="submit" class="btn-gold" style="width: 100%;">
                       Enroll Now
                     </button>
                   </form>
                 {% endif %}
-              {% elif current_user and current_user.role == 'administrator' %}
-                <a href="{{ url_for('admin.edit_course', course_id=course.course_id) }}" class="btn-gold">
+              {% elif user.is_authenticated and user.student_profile.is_admin %}
+                <a href="{% url 'courses:admin_course_edit' course.id %}" class="btn-gold">
                   Update Course
                 </a>
               {% else %}
-                <a href="{{ url_for('auth.login', next=url_for('course.course_detail', course_id=course.course_id)) }}" class="btn-gold">
+                <a href="{% url 'accounts:login' %}?next={% url 'courses:course_detail' course.id %}" class="btn-gold">
                   Enroll Now
                 </a>
               {% endif %}
@@ -147,7 +147,7 @@
         </svg>
         <h3 class="empty-title">No Matching Courses Found</h3>
         <p class="empty-desc">We couldn't find any courses matching your current search filters. Try adjusting keywords or selecting "All Departments".</p>
-        <a href="{{ url_for('course.explore') }}" class="btn-gold">
+        <a href="{% url 'courses:explore' %}" class="btn-gold">
           View All Courses
         </a>
       </div>
